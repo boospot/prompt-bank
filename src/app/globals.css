@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
 }
 
 @theme inline {
@@ -12,15 +12,106 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+@keyframes fade-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes subtle-pop {
+  0% {
+    transform: scale(0.98);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.motion-enter {
+  animation: fade-slide-in 260ms ease-out both;
+}
+
+.motion-pop {
+  animation: subtle-pop 220ms ease-out both;
+}
+
+.motion-card {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.motion-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+.motion-press {
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.motion-press:active {
+  transform: scale(0.98);
+}
+
+details.motion-disclosure > summary {
+  list-style: none;
+}
+
+details.motion-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.motion-disclosure > .disclosure-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0.4;
+  transition:
+    grid-template-rows 220ms ease,
+    opacity 220ms ease;
+}
+
+details.motion-disclosure[open] > .disclosure-panel {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+details.motion-disclosure > .disclosure-panel > .disclosure-content {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-enter,
+  .motion-pop {
+    animation: none !important;
+  }
+
+  .motion-card,
+  .motion-press,
+  details.motion-disclosure > .disclosure-panel {
+    transition: none !important;
+  }
+
+  .motion-card:hover,
+  .motion-press:active {
+    transform: none !important;
+    box-shadow: none !important;
+  }
 }

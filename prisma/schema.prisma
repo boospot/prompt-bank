@@ -1,0 +1,169 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum PromptVisibility {
+  PRIVATE
+  TEAM
+}
+
+enum PromptStatus {
+  DRAFT
+  APPROVED
+  ARCHIVED
+}
+
+enum CollaboratorRole {
+  VIEW
+  EDIT
+}
+
+model Prompt {
+  id            String               @id @default(cuid())
+  title         String
+  description   String?
+  content       String
+  isSaved       Boolean              @default(false)
+  categoryId    String
+  category      Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  tags          PromptTag[]
+  ownerId       String?
+  owner         User?                @relation("OwnedPrompts", fields: [ownerId], references: [id], onDelete: SetNull)
+  visibility    PromptVisibility     @default(TEAM)
+  status        PromptStatus         @default(DRAFT)
+  collaborators PromptCollaborator[]
+  versions      PromptVersion[]
+  savedBy       SavedPrompt[]
+  auditLogs     AuditLog[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@index([title])
+  @@index([createdAt])
+  @@index([categoryId])
+  @@index([ownerId])
+  @@index([status])
+  @@index([visibility])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  prompts     Prompt[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Tag {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  prompts   PromptTag[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model PromptTag {
+  promptId   String
+  tagId      String
+  prompt     Prompt   @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now())
+
+  @@id([promptId, tagId])
+  @@index([tagId])
+}
+
+model User {
+  id             String             @id @default(cuid())
+  name           String?
+  email          String             @unique
+  passwordHash   String
+  role           UserRole           @default(VIEWER)
+  failedLogins   Int                @default(0)
+  lockedUntil    DateTime?
+  lastLoginAt    DateTime?
+  ownedPrompts   Prompt[]           @relation("OwnedPrompts")
+  collaborations PromptCollaborator[]
+  savedPrompts   SavedPrompt[]
+  auditLogs      AuditLog[]         @relation("AuditActor")
+  promptVersions PromptVersion[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+}
+
+model PromptCollaborator {
+  promptId   String
+  userId     String
+  role       CollaboratorRole @default(VIEW)
+  prompt     Prompt           @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@id([promptId, userId])
+  @@index([userId])
+  @@index([role])
+}
+
+model SavedPrompt {
+  promptId   String
+  userId     String
+  prompt     Prompt   @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@id([promptId, userId])
+  @@index([userId])
+}
+
+model PromptVersion {
+  id           String    @id @default(cuid())
+  promptId     String
+  prompt       Prompt    @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  version      Int
+  title        String
+  description  String?
+  content      String
+  categoryId   String
+  tagsCsv      String
+  visibility   PromptVisibility
+  status       PromptStatus
+  changedById  String?
+  changedBy    User?     @relation(fields: [changedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+
+  @@unique([promptId, version])
+  @@index([promptId, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String
+  entityId   String
+  promptId   String?
+  prompt     Prompt?  @relation(fields: [promptId], references: [id], onDelete: SetNull)
+  metadata   String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([actorId])
+  @@index([promptId])
+}
