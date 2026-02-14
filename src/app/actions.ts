@@ -179,6 +179,29 @@ export async function createPromptAction(formData: FormData) {
   try {
     await assertCategoryExists(parsed.data.categoryId);
 
+    // Guard against rapid repeat submissions creating duplicate prompts.
+    const recentDuplicate = await prisma.prompt.findFirst({
+      where: {
+        ownerId: user.id,
+        title: parsed.data.title,
+        description: parsed.data.description || null,
+        content: parsed.data.content,
+        categoryId: parsed.data.categoryId,
+        visibility: parsed.data.visibility,
+        status: parsed.data.status,
+        createdAt: {
+          gte: new Date(Date.now() - 30_000),
+        },
+      },
+      select: { id: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (recentDuplicate) {
+      revalidatePath("/");
+      redirect("/?status=created");
+    }
+
     const prompt = await prisma.prompt.create({
       data: {
         title: parsed.data.title,

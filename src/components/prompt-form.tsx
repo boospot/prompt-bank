@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PromptStatus, PromptVisibility } from "@prisma/client";
 import { FormPersist } from "@/components/form-persist";
+import { FormSubmitButton } from "@/components/form-submit-button";
 
 type CategoryOption = {
   id: string;
@@ -173,12 +174,11 @@ export function PromptForm({
         </label>
 
         <div className="flex items-center gap-3 pt-2">
-          <button
-            type="submit"
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500"
-          >
-            {submitLabel}
-          </button>
+          <FormSubmitButton
+            label={submitLabel}
+            pendingLabel="Saving..."
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
+          />
           <Link
             href="/"
             className="rounded-lg border border-black/15 px-4 py-2 text-sm font-medium text-black transition hover:bg-black/[0.03]"
