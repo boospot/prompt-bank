@@ -1,15 +1,9 @@
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { PrismaClient, UserRole } from "@prisma/client";
+import { UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { getServerSession, type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { prisma } from "@/lib/prisma";
 import { sanitizeAuditMetadata } from "@/lib/security";
-
-const prisma = new PrismaClient({
-  adapter: new PrismaBetterSqlite3({
-    url: process.env.DATABASE_URL ?? "file:./dev.db",
-  }),
-});
 
 const MAX_FAILED_LOGIN_ATTEMPTS = 5;
 const ACCOUNT_LOCK_MINUTES = 15;
